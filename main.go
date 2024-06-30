@@ -18,7 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	contract "github.com/pavelkrolevets/vc-module/src/bind"
+	contract "github.com/MIRChain/vc-module/src/bind"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -48,86 +48,80 @@ var (
 	Uint8SliceNested, _ = abi.NewType("uint8[][]", "", nil)
 )
 
-
 type Credential struct {
-	Context string `json:"@context"`
-	Id string `json:"id"`
-	Type string `json:"type"`
-	Issuer string `json:"issuer"`
-	IssuanceDate time.Time `json:"issuanceDate"`
-	ExpirationDate time.Time `json:"expirationDate"`
+	Context           string            `json:"@context"`
+	Id                string            `json:"id"`
+	Type              string            `json:"type"`
+	Issuer            string            `json:"issuer"`
+	IssuanceDate      time.Time         `json:"issuanceDate"`
+	ExpirationDate    time.Time         `json:"expirationDate"`
 	CredentialSubject CredentialSubject `json:"credentialSubject"`
-	Proof []Proof `json:"proof"`
-
+	Proof             []Proof           `json:"proof"`
 }
 
 type CredentialSubject struct {
-	Id string `json:"id"`
+	Id   string `json:"id"`
 	Data string `json:"data"`
 }
 
 type Proof struct {
-	Id string `json:"id"`
-	Type string `json:"type"`
-	ProofPurpose string `json:"proofPurpose"`
-	VerificationMethod string `json:"verificationMethod"`
-	Domain common.Address `json:"domain"`
-	ProofValue string `json:"proofValue"`
-
+	Id                 string         `json:"id"`
+	Type               string         `json:"type"`
+	ProofPurpose       string         `json:"proofPurpose"`
+	VerificationMethod string         `json:"verificationMethod"`
+	Domain             common.Address `json:"domain"`
+	ProofValue         string         `json:"proofValue"`
 }
 
 func main() {
 	DeployRegistry()
 }
 
-
-func DeployRegistry(){
+func DeployRegistry() {
 	// gost3410.GostCurve = gost3410.CurveIdGostR34102001CryptoProAParamSet()
 	back, err := ethclient.Dial("http://127.0.0.1:8545")
 	if err != nil {
 		panic(err)
 	}
 	ctx := context.Background()
-	
+
 	// Accounts
-	jsonBytes, err := ioutil.ReadFile("./keys/keystore/UTC--2023-04-03T08-15-20.263797183Z--c6494ec224c2e9e21108005ca4682a81ed4786a2")
-    if err != nil {
-        log.Fatal(err)
-    }
+	jsonBytes, err := ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-13-21.083288244Z--014c0bb53c88290976012ea871c95a8d6dd03d0e")
+	if err != nil {
+		log.Fatal(err)
+	}
 	subject, err := keystore.DecryptKey(jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2022-08-17T13-11-15.885898644Z--25face3782641d4ad4c7eaf2ee5eb8a7dcfab465")
-    if err != nil {
-        log.Fatal(err)
-    }
-	issuer, err := keystore.DecryptKey(jsonBytes, "Gfdtk81,")
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-17.290930840Z--95a51c875f2764c46b4424e1fc361d2300d043f4")
+	if err != nil {
+		log.Fatal(err)
+	}
+	issuer, err := keystore.DecryptKey(jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2018-06-24T06-42-15.344831400Z--01665a4eb869efbf3af991e0b791d5347718a49d")
-    if err != nil {
-        log.Fatal(err)
-    }
-	signer_1, err := keystore.DecryptKey(jsonBytes, "extreme8811")
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-39.641539706Z--a32f367e95b038664e99851e4355947a5d2cdbda")
+	if err != nil {
+		log.Fatal(err)
+	}
+	signer_1, err := keystore.DecryptKey(jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2018-07-18T10-22-47.145427470Z--3833067356d624e36fa8cfaf208e97263f3e0703")
-    if err != nil {
-        log.Fatal(err)
-    }
-	signer_2, err := keystore.DecryptKey(jsonBytes, "password")
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-53.521102494Z--5246b17c9c99fcb0a2e8c79e3f151e45ca70b9f9")
+	if err != nil {
+		log.Fatal(err)
+	}
+	signer_2, err := keystore.DecryptKey(jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
-
-
-	auth, err := bind.NewKeyedTransactorWithChainID(issuer.PrivateKey, big.NewInt(123456789))
+	auth, err := bind.NewKeyedTransactorWithChainID(issuer.PrivateKey, big.NewInt(1515))
 	if err != nil {
 		panic(err)
 	}
@@ -145,7 +139,7 @@ func DeployRegistry(){
 		panic(err)
 	}
 	log.Println("Contract receipt block num : ", receipt.BlockNumber.String())
-	
+
 	credentialRegistry, err := contract.NewCredentialRegistry(registryAddress, back)
 	if err != nil {
 		panic(err)
@@ -159,13 +153,13 @@ func DeployRegistry(){
 
 	log.Println("Contract Credential Registry deployed at addr: ", claimsVerifierAddress.Hex())
 	log.Println("Tx hash ", tx.Hash().Hex())
-	
+
 	receipt, err = bind.WaitMined(ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}
 	log.Println("Contract receipt block num : ", receipt.BlockNumber.String())
-	
+
 	claimsVerifier, err := contract.NewClaimsVerifier(claimsVerifierAddress, back)
 	if err != nil {
 		panic(err)
@@ -193,6 +187,7 @@ func DeployRegistry(){
 	if err != nil {
 		panic(err)
 	}
+	log.Println("receipt block num : ", receipt.BlockNumber.String())
 	tx, err = claimsVerifier.GrantRole(auth, issuerRole, issuer.Address)
 	if err != nil {
 		panic(err)
@@ -221,22 +216,23 @@ func DeployRegistry(){
 	}
 	log.Println("receipt block num : ", receipt.BlockNumber.String())
 
-
-	vc :=  Credential { 
-		Context: "https://www.w3.org/2018/credentials/v1",
-		Id: "73bde252-cb3e-44ab-94f9-eba6a8a2f28d",
-		Type: "VerifiableCredential",
-		Issuer: `did:mir:main:` + issuer.Address.String(),
-		IssuanceDate: time.Now(),
+	vc := Credential{
+		Context:        "https://www.w3.org/2018/credentials/v1",
+		Id:             "73bde252-cb3e-44ab-94f9-eba6a8a2f28d",
+		Type:           "VerifiableCredential",
+		Issuer:         `did:mir:main:` + issuer.Address.String(),
+		IssuanceDate:   time.Now(),
 		ExpirationDate: time.Now().Add(time.Hour * 2),
 		CredentialSubject: CredentialSubject{
-			Id: `did:mir:main:` + subject.Address.Hex(),
+			Id:   `did:mir:main:` + subject.Address.Hex(),
 			Data: "some_data",
 		},
 		Proof: []Proof{},
 	}
-	credentialHash, err := getCredentialHash( vc, issuer.Address, claimsVerifierAddress )
-	
+	credentialHash, err := getCredentialHash(vc, issuer.Address, claimsVerifierAddress)
+	if err != nil {
+		panic(err)
+	}
 	sig, err := crypto.Sign(credentialHash, issuer.PrivateKey)
 	if err != nil {
 		panic(err)
@@ -259,34 +255,37 @@ func DeployRegistry(){
 	log.Println("RegisterCredential receipt status : ", receipt.Status)
 
 	vc.Proof = append(vc.Proof, Proof{
-		Id: issuer.Address.Hex(),
-		Type: "EcdsaSecp256k1Signature2019",
-		ProofPurpose: "assertionMethod",
+		Id:                 issuer.Address.Hex(),
+		Type:               "EcdsaSecp256k1Signature2019",
+		ProofPurpose:       "assertionMethod",
 		VerificationMethod: vc.Issuer + `#vm-0`,
-		Domain: claimsVerifierAddress,
-		ProofValue: "0x"+hex.EncodeToString(sig),
+		Domain:             claimsVerifierAddress,
+		ProofValue:         "0x" + hex.EncodeToString(sig),
 	})
 
-	credentialAtContract, err  := credentialRegistry.Credentials(&bind.CallOpts{Context: ctx}, [32]byte(credentialHash), subject.Address)
+	credentialAtContract, err := credentialRegistry.Credentials(&bind.CallOpts{Context: ctx}, [32]byte(credentialHash), subject.Address)
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("%v", credentialAtContract)
+	log.Printf("Credential at contract %v", credentialAtContract)
 
 	// verify a VC
-	json, err := json.Marshal( vc.CredentialSubject )
+	json, err := json.Marshal(vc.CredentialSubject)
 	if err != nil {
 		panic(err)
 	}
 	data := Sha256(json)
-	log.Println(vc.Proof[0].ProofValue)
+
+	log.Printf("Proof value %s", vc.Proof[0].ProofValue)
+
 	sigToVerify := hexutil.MustDecode(vc.Proof[0].ProofValue)
-	vcToVerify:= contract.ClaimTypesVerifiableCredential {
-		Issuer: common.HexToAddress(strings.Split(vc.Issuer, ":")[3]),
-		Subject: common.HexToAddress(strings.Split(vc.CredentialSubject.Id, ":")[3]),
-		Data: [32]byte(data),
-		ValidFrom: big.NewInt(vc.IssuanceDate.Unix()/1000),
-		ValidTo: big.NewInt(vc.IssuanceDate.Unix()/1000),
+
+	vcToVerify := contract.ClaimTypesVerifiableCredential{
+		Issuer:    common.HexToAddress(strings.Split(vc.Issuer, ":")[3]),
+		Subject:   common.HexToAddress(strings.Split(vc.CredentialSubject.Id, ":")[3]),
+		Data:      [32]byte(data),
+		ValidFrom: big.NewInt(vc.IssuanceDate.Unix() / 1000),
+		ValidTo:   big.NewInt(vc.IssuanceDate.Unix() / 1000),
 	}
 
 	credentialExists, isNotRevoked, issuerSignatureValid, additionalSigners, isNotExpired, err := claimsVerifier.VerifyCredential(&bind.CallOpts{Pending: true, Context: ctx}, vcToVerify, uint8(sigToVerify[64]), [32]byte(sigToVerify[:32]), [32]byte(sigToVerify[32:64]))
@@ -298,60 +297,63 @@ func DeployRegistry(){
 }
 
 func getCredentialHash(vc Credential, issuer common.Address, claimsVerifierContractAddress common.Address) ([]byte, error) {
-	json, err := json.Marshal( vc.CredentialSubject )
+	json, err := json.Marshal(vc.CredentialSubject)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("cant marshall %w", err)
 	}
 	hashDiplomaHex := hexutil.Encode(Sha256(json))
-	
+
 	argumentsEIP712Domain := abi.Arguments{
-        {
-            Type: Bytes32,
-        },
-        {
-            Type: Bytes32,
-        },
-        {
-            Type: Bytes32,
-        },
 		{
-            Type: Uint256,
-        },
+			Type: Bytes32,
+		},
 		{
-            Type: Address,
-        },
-    }
+			Type: Bytes32,
+		},
+		{
+			Type: Bytes32,
+		},
+		{
+			Type: Uint256,
+		},
+		{
+			Type: Address,
+		},
+	}
 
 	encodeEIP712Domain, err := argumentsEIP712Domain.Pack(
-        EIP712DOMAIN_TYPEHASH,
-        Sha256([]byte("EIP712Domain")),
-        Sha256([]byte("1")),
-		648529,
+		EIP712DOMAIN_TYPEHASH,
+		Sha256([]byte("EIP712Domain")),
+		Sha256([]byte("1")),
+		1,
 		claimsVerifierContractAddress,
-    )
+	)
+	if err != nil {
+		return nil, fmt.Errorf("cant abi pack argumentsEIP712Domain %w", err)
+	}
 
 	hashEIP712Domain := Sha256(encodeEIP712Domain)
 
 	argumentsHashCredential := abi.Arguments{
-        {
-            Type: Bytes32,
-        },
-        {
-            Type: Address,
-        },
-        {
-            Type: Address,
-        },
 		{
-            Type: Bytes32,
-        },
+			Type: Bytes32,
+		},
 		{
-            Type: Uint256,
-        },
+			Type: Address,
+		},
 		{
-            Type: Uint256,
-        },
-    }
+			Type: Address,
+		},
+		{
+			Type: Bytes32,
+		},
+		{
+			Type: Uint256,
+		},
+		{
+			Type: Uint256,
+		},
+	}
 
 	subjectAddress := strings.Split(vc.CredentialSubject.Id, ":")[3]
 
@@ -363,21 +365,25 @@ func getCredentialHash(vc Credential, issuer common.Address, claimsVerifierContr
 		vc.IssuanceDate.Unix(),
 		vc.ExpirationDate.Unix(),
 	)
+	if err != nil {
+		return nil, fmt.Errorf("cant abi pack argumentsHashCredential %w", err)
+	}
 	hashCredential := Sha256(encodeHashCredential)
 
-
-	arguments :=  abi.Arguments{
-        {
-            Type: Bytes32,
-        },
+	arguments := abi.Arguments{
 		{
-            Type: Bytes32,
-        },
-    }
-	
-	encodedCredentialHash, err := arguments.Pack(hashEIP712Domain, hashCredential)
+			Type: Bytes32,
+		},
+		{
+			Type: Bytes32,
+		},
+	}
 
-	return Sha256(append([]byte("0x1901"), encodedCredentialHash...)), err
+	encodedCredentialHash, err := arguments.Pack(hashEIP712Domain, hashCredential)
+	if err != nil {
+		return nil, fmt.Errorf("cant abi pack arguments %w", err)
+	}
+	return Sha256(append([]byte("0x1901"), encodedCredentialHash...)), nil
 
 }
 

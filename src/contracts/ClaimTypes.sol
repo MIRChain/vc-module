@@ -17,7 +17,7 @@ contract ClaimTypes {
         "VerifiableCredential(address issuer,address subject,bytes32 data,uint256 validFrom,uint256 validTo)"
     );
 
-    function hashVerifiableCredential(VerifiableCredential memory vc) internal pure returns (bytes32) {//0xAABBCC11223344....556677
+    function hashVerifiableCredential(VerifiableCredential memory vc) internal pure returns (bytes32) {
         return keccak256(
             abi.encode(
                 VERIFIABLE_CREDENTIAL_TYPEHASH,
