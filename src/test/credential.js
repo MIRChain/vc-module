@@ -74,20 +74,23 @@ function signCredential(credentialHash, issuer) {
 contract("Verifiable Credentials", (accounts) => {
   const subject = accounts[1];
   const issuer = {
-    address: accounts[0], //'0x47adc0faa4f6eb42b499187317949ed99e77ee85'
+    address: accounts[0], // eg '0x47adc0faa4f6eb42b499187317949ed99e77ee85'
+    // dont forget to update from ganache
     privateKey:
-      "9bd00efc58edd178904e20934b77fe4b5ca1d88336b4fad9f337a7022b5f8eaa",
+      "cd259888f21b6b74d000f05f8a7f5e83c112f2fbe2e8b9e54737278d9f250bfb",
   };
   const signers = [
     {
-      address: accounts[2], //'0x4a5a6460d00c4d8c2835a3067f53fb42021d5bb9'
+      address: accounts[2], // eg '0x4a5a6460d00c4d8c2835a3067f53fb42021d5bb9'
+      // dont forget to update from ganache
       privateKey:
-        "eaa13252091761655d59a5f82b3d48942776256454ac411d9e7048026586ccfc",
+        "56e94a2b9e3236e121983dc172e4ecaa9095140690a0cae0c0712a1fc21e4d04",
     },
     {
-      address: accounts[3], //'0x4222ec932c5a68b80e71f4ddebb069fa02518b8a'
+      address: accounts[3], // eg '0x4222ec932c5a68b80e71f4ddebb069fa02518b8a'
+      // dont forget to update from ganache
       privateKey:
-        "76c439ed87d76ebf84ca0e0c5a576d517a18ab7d55fe9e4349a1c56b2e86efa6",
+        "935674e83a226d25e09d9547770e1aa3c4460fbf33a2bc034d11a823c1457531",
     },
   ];
 
@@ -95,11 +98,11 @@ contract("Verifiable Credentials", (accounts) => {
     "@context": "https://www.w3.org/2018/credentials/v1",
     id: "73bde252-cb3e-44ab-94f9-eba6a8a2f28d",
     type: "VerifiableCredential",
-    issuer: `did:lac:main:${issuer.address}`,
+    issuer: `did:mir:main:${issuer.address}`,
     issuanceDate: moment().toISOString(),
     expirationDate: moment().add(1, "years").toISOString(),
     credentialSubject: {
-      id: `did:lac:main:${subject}`,
+      id: `did:mir:main:${subject}`,
       data: "test",
     },
     proof: [],
@@ -117,7 +120,20 @@ contract("Verifiable Credentials", (accounts) => {
 
     const credentialHash = getCredentialHash(vc, issuer, instance.address);
     const signature = await signCredential(credentialHash, issuer);
-
+    const sigObject = await ethUtil.fromRpcSig(signature);
+    console.log("Sig: ", signature);
+    console.log("Sig: v", sigObject.v);
+    console.log("Sig: r", sigObject.r);
+    console.log("Sig: s", sigObject.s);
+    const pubKeyRecovered = await ethUtil.ecrecover(
+      Buffer.from(credentialHash.substring(2, 67), "hex"),
+      sigObject.v - 27,
+      sigObject.r,
+      sigObject.s
+    );
+    addrRecovered = ethUtil.Address.fromPublicKey(pubKeyRecovered);
+    console.log("Recovered address:", addrRecovered.toString());
+    console.log("Issuer address:", issuer.address);
     const tx = await instance.registerCredential(
       subject,
       credentialHash,
@@ -141,181 +157,181 @@ contract("Verifiable Credentials", (accounts) => {
     return assert.equal(tx.receipt.status, true);
   });
 
-  //   it("should fail verify additional signers", async () => {
-  //     const instance = await ClaimsVerifier.deployed();
+  it("should fail verify additional signers", async () => {
+    const instance = await ClaimsVerifier.deployed();
 
-  //     const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
-  //     const rsv = ethUtil.fromRpcSig(vc.proof[0].proofValue);
-  //     const result = await instance.verifyCredential(
-  //       [
-  //         vc.issuer.replace("did:lac:main:", ""),
-  //         vc.credentialSubject.id.replace("did:lac:main:", ""),
-  //         data,
-  //         Math.round(moment(vc.issuanceDate).valueOf() / 1000),
-  //         Math.round(moment(vc.expirationDate).valueOf() / 1000),
-  //       ],
-  //       rsv.v,
-  //       rsv.r,
-  //       rsv.s
-  //     );
+    const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
+    const rsv = ethUtil.fromRpcSig(vc.proof[0].proofValue);
+    const result = await instance.verifyCredential(
+      [
+        vc.issuer.replace("did:mir:main:", ""),
+        vc.credentialSubject.id.replace("did:mir:main:", ""),
+        data,
+        Math.round(moment(vc.issuanceDate).valueOf() / 1000),
+        Math.round(moment(vc.expirationDate).valueOf() / 1000),
+      ],
+      rsv.v,
+      rsv.r,
+      rsv.s
+    );
 
-  //     const additionalSigners = result[3];
+    const additionalSigners = result[3];
 
-  //     assert.equal(additionalSigners, false);
-  //   });
+    assert.equal(additionalSigners, false);
+  });
 
-  //   it("should register additional signatures to the VC", async () => {
-  //     const instance = await ClaimsVerifier.deployed();
+  it("should register additional signatures to the VC", async () => {
+    const instance = await ClaimsVerifier.deployed();
 
-  //     const credentialHash = getCredentialHash(vc, issuer, instance.address);
-  //     const signature1 = await signCredential(credentialHash, signers[0]);
+    const credentialHash = getCredentialHash(vc, issuer, instance.address);
+    const signature1 = await signCredential(credentialHash, signers[0]);
 
-  //     const tx1 = await instance.registerSignature(
-  //       credentialHash,
-  //       issuer.address,
-  //       signature1,
-  //       { from: signers[0].address }
-  //     );
+    const tx1 = await instance.registerSignature(
+      credentialHash,
+      issuer.address,
+      signature1,
+      { from: signers[0].address }
+    );
 
-  //     vc.proof.push({
-  //       id: `did:lac:main:${signers[0]}`,
-  //       type: "EcdsaSecp256k1Signature2019",
-  //       proofPurpose: "assertionMethod",
-  //       verificationMethod: `did:lac:main:${signers[0]}#vm-0`,
-  //       domain: instance.address,
-  //       proofValue: signature1,
-  //     });
+    vc.proof.push({
+      id: `did:mir:main:${signers[0]}`,
+      type: "EcdsaSecp256k1Signature2019",
+      proofPurpose: "assertionMethod",
+      verificationMethod: `did:mir:main:${signers[0]}#vm-0`,
+      domain: instance.address,
+      proofValue: signature1,
+    });
 
-  //     assert.equal(tx1.receipt.status, true);
+    assert.equal(tx1.receipt.status, true);
 
-  //     const signature2 = await signCredential(credentialHash, signers[1]);
-  //     const tx2 = await instance.registerSignature(
-  //       credentialHash,
-  //       issuer.address,
-  //       signature2,
-  //       { from: signers[1].address }
-  //     );
+    const signature2 = await signCredential(credentialHash, signers[1]);
+    const tx2 = await instance.registerSignature(
+      credentialHash,
+      issuer.address,
+      signature2,
+      { from: signers[1].address }
+    );
 
-  //     vc.proof.push({
-  //       id: `did:lac:main:${signers[1]}`,
-  //       type: "EcdsaSecp256k1Signature2019",
-  //       proofPurpose: "assertionMethod",
-  //       verificationMethod: `did:lac:main:${signers[1]}#vm-0`,
-  //       domain: instance.address,
-  //       proofValue: signature2,
-  //     });
+    vc.proof.push({
+      id: `did:mir:main:${signers[1]}`,
+      type: "EcdsaSecp256k1Signature2019",
+      proofPurpose: "assertionMethod",
+      verificationMethod: `did:mir:main:${signers[1]}#vm-0`,
+      domain: instance.address,
+      proofValue: signature2,
+    });
 
-  //     await sleep(1);
+    await sleep(1);
 
-  //     return assert.equal(tx2.receipt.status, true);
-  //   });
+    return assert.equal(tx2.receipt.status, true);
+  });
 
-  //   it("should verify a VC", async () => {
-  //     const instance = await ClaimsVerifier.deployed();
-  //     // console.log( vc );
+  it("should verify a VC", async () => {
+    const instance = await ClaimsVerifier.deployed();
+    // console.log( vc );
 
-  //     const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
-  //     const rsv = ethUtil.fromRpcSig(vc.proof[0].proofValue);
-  //     const result = await instance.verifyCredential(
-  //       [
-  //         vc.issuer.replace("did:lac:main:", ""),
-  //         vc.credentialSubject.id.replace("did:lac:main:", ""),
-  //         data,
-  //         Math.round(moment(vc.issuanceDate).valueOf() / 1000),
-  //         Math.round(moment(vc.expirationDate).valueOf() / 1000),
-  //       ],
-  //       rsv.v,
-  //       rsv.r,
-  //       rsv.s
-  //     );
+    const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
+    const rsv = ethUtil.fromRpcSig(vc.proof[0].proofValue);
+    const result = await instance.verifyCredential(
+      [
+        vc.issuer.replace("did:mir:main:", ""),
+        vc.credentialSubject.id.replace("did:mir:main:", ""),
+        data,
+        Math.round(moment(vc.issuanceDate).valueOf() / 1000),
+        Math.round(moment(vc.expirationDate).valueOf() / 1000),
+      ],
+      rsv.v,
+      rsv.r,
+      rsv.s
+    );
 
-  //     const credentialExists = result[0];
-  //     const isNotRevoked = result[1];
-  //     const issuerSignatureValid = result[2];
-  //     const additionalSigners = result[3];
-  //     const isNotExpired = result[4];
+    const credentialExists = result[0];
+    const isNotRevoked = result[1];
+    const issuerSignatureValid = result[2];
+    const additionalSigners = result[3];
+    const isNotExpired = result[4];
 
-  //     assert.equal(credentialExists, true);
-  //     assert.equal(isNotRevoked, true);
-  //     assert.equal(issuerSignatureValid, true);
-  //     assert.equal(additionalSigners, true);
-  //     assert.equal(isNotExpired, true);
-  //   });
+    assert.equal(credentialExists, true);
+    assert.equal(isNotRevoked, true);
+    assert.equal(issuerSignatureValid, true);
+    assert.equal(additionalSigners, true);
+    assert.equal(isNotExpired, true);
+  });
 
-  //   it("should verify additional signatures", async () => {
-  //     const instance = await ClaimsVerifier.deployed();
+  it("should verify additional signatures", async () => {
+    const instance = await ClaimsVerifier.deployed();
 
-  //     const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
+    const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
 
-  //     const sign1 = await instance.verifySigner(
-  //       [
-  //         vc.issuer.replace("did:lac:main:", ""),
-  //         vc.credentialSubject.id.replace("did:lac:main:", ""),
-  //         data,
-  //         Math.round(moment(vc.issuanceDate).valueOf() / 1000),
-  //         Math.round(moment(vc.expirationDate).valueOf() / 1000),
-  //       ],
-  //       vc.proof[1].proofValue
-  //     );
+    const sign1 = await instance.verifySigner(
+      [
+        vc.issuer.replace("did:mir:main:", ""),
+        vc.credentialSubject.id.replace("did:mir:main:", ""),
+        data,
+        Math.round(moment(vc.issuanceDate).valueOf() / 1000),
+        Math.round(moment(vc.expirationDate).valueOf() / 1000),
+      ],
+      vc.proof[1].proofValue
+    );
 
-  //     assert.equal(sign1, true);
+    assert.equal(sign1, true);
 
-  //     const sign2 = await instance.verifySigner(
-  //       [
-  //         vc.issuer.replace("did:lac:main:", ""),
-  //         vc.credentialSubject.id.replace("did:lac:main:", ""),
-  //         data,
-  //         Math.round(moment(vc.issuanceDate).valueOf() / 1000),
-  //         Math.round(moment(vc.expirationDate).valueOf() / 1000),
-  //       ],
-  //       vc.proof[2].proofValue
-  //     );
+    const sign2 = await instance.verifySigner(
+      [
+        vc.issuer.replace("did:mir:main:", ""),
+        vc.credentialSubject.id.replace("did:mir:main:", ""),
+        data,
+        Math.round(moment(vc.issuanceDate).valueOf() / 1000),
+        Math.round(moment(vc.expirationDate).valueOf() / 1000),
+      ],
+      vc.proof[2].proofValue
+    );
 
-  //     assert.equal(sign2, true);
-  //   });
+    assert.equal(sign2, true);
+  });
 
-  //   it("should revoke the credential", async () => {
-  //     const instance = await ClaimsVerifier.deployed();
-  //     const registry = await CredentialRegistry.deployed();
+  it("should revoke the credential", async () => {
+    const instance = await ClaimsVerifier.deployed();
+    const registry = await CredentialRegistry.deployed();
 
-  //     const credentialHash = getCredentialHash(vc, issuer, instance.address);
+    const credentialHash = getCredentialHash(vc, issuer, instance.address);
 
-  //     const tx = await registry.revokeCredential(credentialHash);
+    const tx = await registry.revokeCredential(credentialHash);
 
-  //     assert.equal(tx.receipt.status, true);
-  //   });
+    assert.equal(tx.receipt.status, true);
+  });
 
-  //   it("should fail the verification process due credential status", async () => {
-  //     const instance = await ClaimsVerifier.deployed();
+  it("should fail the verification process due credential status", async () => {
+    const instance = await ClaimsVerifier.deployed();
 
-  //     const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
-  //     const rsv = ethUtil.fromRpcSig(vc.proof[0].proofValue);
-  //     const result = await instance.verifyCredential(
-  //       [
-  //         vc.issuer.replace("did:lac:main:", ""),
-  //         vc.credentialSubject.id.replace("did:lac:main:", ""),
-  //         data,
-  //         Math.round(moment(vc.issuanceDate).valueOf() / 1000),
-  //         Math.round(moment(vc.expirationDate).valueOf() / 1000),
-  //       ],
-  //       rsv.v,
-  //       rsv.r,
-  //       rsv.s
-  //     );
+    const data = `0x${sha256(JSON.stringify(vc.credentialSubject))}`;
+    const rsv = ethUtil.fromRpcSig(vc.proof[0].proofValue);
+    const result = await instance.verifyCredential(
+      [
+        vc.issuer.replace("did:mir:main:", ""),
+        vc.credentialSubject.id.replace("did:mir:main:", ""),
+        data,
+        Math.round(moment(vc.issuanceDate).valueOf() / 1000),
+        Math.round(moment(vc.expirationDate).valueOf() / 1000),
+      ],
+      rsv.v,
+      rsv.r,
+      rsv.s
+    );
 
-  //     const isNotRevoked = result[1];
+    const isNotRevoked = result[1];
 
-  //     assert.equal(isNotRevoked, false);
-  //   });
+    assert.equal(isNotRevoked, false);
+  });
 
-  //   it("should verify credential status using the CredentialRegistry", async () => {
-  //     const instance = await ClaimsVerifier.deployed();
-  //     const registry = await CredentialRegistry.deployed();
+  it("should verify credential status using the CredentialRegistry", async () => {
+    const instance = await ClaimsVerifier.deployed();
+    const registry = await CredentialRegistry.deployed();
 
-  //     const credentialHash = getCredentialHash(vc, issuer, instance.address);
+    const credentialHash = getCredentialHash(vc, issuer, instance.address);
 
-  //     const result = await registry.status(issuer.address, credentialHash);
+    const result = await registry.status(issuer.address, credentialHash);
 
-  //     assert.equal(result, false);
-  //   });
+    assert.equal(result, false);
+  });
 });
