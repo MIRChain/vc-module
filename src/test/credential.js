@@ -77,20 +77,20 @@ contract("Verifiable Credentials", (accounts) => {
     address: accounts[0], // eg '0x47adc0faa4f6eb42b499187317949ed99e77ee85'
     // dont forget to update from ganache
     privateKey:
-      "cd259888f21b6b74d000f05f8a7f5e83c112f2fbe2e8b9e54737278d9f250bfb",
+      "89f6fd874041aa38800b29c04ec6097bd5eb76c10cdbaafe746b1ff1c91ea782",
   };
   const signers = [
     {
       address: accounts[2], // eg '0x4a5a6460d00c4d8c2835a3067f53fb42021d5bb9'
       // dont forget to update from ganache
       privateKey:
-        "56e94a2b9e3236e121983dc172e4ecaa9095140690a0cae0c0712a1fc21e4d04",
+        "ee5cd6a2cd74e20de5fa04ea156b25b3e55dffae6170873e3e4c94982111e00a",
     },
     {
       address: accounts[3], // eg '0x4222ec932c5a68b80e71f4ddebb069fa02518b8a'
       // dont forget to update from ganache
       privateKey:
-        "935674e83a226d25e09d9547770e1aa3c4460fbf33a2bc034d11a823c1457531",
+        "d0e8b2d78981815f378f0c806850b351855d32596084e0d63774482867e1dd2d",
     },
   ];
 

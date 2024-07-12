@@ -18,8 +18,9 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	contract "github.com/MIRChain/vc-module/src/bind"
 	"golang.org/x/crypto/sha3"
+
+	contract "github.com/MIRChain/vc-module/src/bind"
 )
 
 var VERIFIABLE_CREDENTIAL_TYPEHASH = Sha256([]byte("VerifiableCredential(address issuer,address subject,bytes32 data,uint256 validFrom,uint256 validTo)"))
@@ -79,7 +80,7 @@ func main() {
 
 func DeployRegistry() {
 	// gost3410.GostCurve = gost3410.CurveIdGostR34102001CryptoProAParamSet()
-	back, err := ethclient.Dial("http://127.0.0.1:8545")
+	back, err := ethclient.Dial("http://127.0.0.1:7545")
 	if err != nil {
 		panic(err)
 	}
