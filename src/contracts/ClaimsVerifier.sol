@@ -62,6 +62,17 @@ contract ClaimsVerifier is AbstractClaimsVerifier, ClaimTypes, AccessControlEnum
         return _registerSignature(_credentialHash, issuer, _signature);
     }
 
+    function credentialHash(VerifiableCredential memory vc) public view returns (bytes32) {
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR,
+                hashVerifiableCredential(vc)
+            )
+        );
+        return digest;
+    }
+
     modifier onlyAdmin(){
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not Admin");
         _;

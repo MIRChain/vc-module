@@ -122,7 +122,7 @@ func DeployRegistry() {
 	if err != nil {
 		panic(err)
 	}
-	auth, err := bind.NewKeyedTransactorWithChainID(issuer.PrivateKey, big.NewInt(1515))
+	auth, err := bind.NewKeyedTransactorWithChainID(issuer.PrivateKey, big.NewInt(648529))
 	if err != nil {
 		panic(err)
 	}
@@ -226,7 +226,7 @@ func DeployRegistry() {
 		ExpirationDate: time.Now().Add(time.Hour * 2),
 		CredentialSubject: CredentialSubject{
 			Id:   `did:mir:main:` + subject.Address.Hex(),
-			Data: "some_data",
+			Data: "diploma_magna_cum_laude",
 		},
 		Proof: []Proof{},
 	}
@@ -234,7 +234,7 @@ func DeployRegistry() {
 	if err != nil {
 		panic(err)
 	}
-	sig, err := crypto.Sign(credentialHash, issuer.PrivateKey)
+	sig, err := crypto.Sign(credentialHash[:], issuer.PrivateKey)
 	if err != nil {
 		panic(err)
 	}
@@ -244,7 +244,7 @@ func DeployRegistry() {
 	sig[64] = v.Bytes()[0]
 
 	// register a VC
-	tx, err = claimsVerifier.RegisterCredential(auth, subject.Address, [32]byte(credentialHash), big.NewInt(vc.IssuanceDate.Unix()/1000), big.NewInt(vc.ExpirationDate.Unix()/1000), sig)
+	tx, err = claimsVerifier.RegisterCredential(auth, subject.Address, credentialHash, big.NewInt(vc.IssuanceDate.Unix()/1000), big.NewInt(vc.ExpirationDate.Unix()/1000), sig)
 	if err != nil {
 		panic(err)
 	}
@@ -253,7 +253,53 @@ func DeployRegistry() {
 	if err != nil {
 		panic(err)
 	}
+	if receipt.Status != 1 {
+		panic("credential is not registered")
+	}
 	log.Println("RegisterCredential receipt status : ", receipt.Status)
+
+	// read event
+	// query := ethereum.FilterQuery{
+	// 	FromBlock: big.NewInt(0),
+	// 	ToBlock:   big.NewInt(1000),
+	// 	Addresses: []common.Address{
+	// 		claimsVerifierAddress,
+	// 	},
+	// }
+	// logs, err := back.FilterLogs(context.Background(), query)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// contractAbi, err := abi.JSON(strings.NewReader(contract.CredentialRegistryABI))
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// for _, vLog := range logs {
+	// 	fmt.Println(vLog.BlockHash.Hex()) // 0x3404b8c050aa0aacd0223e91b5c32fee6400f357764771d0684fa7b3f448f1a8
+	// 	fmt.Println(vLog.BlockNumber)     // 2394201
+	// 	fmt.Println(vLog.TxHash.Hex())    // 0x280201eda63c9ff6f305fcee51d5eb86167fab40ca3108ec784e8652a0e2b1a6
+
+	// event := make(map[string]interface{})
+	// err := contractAbi.UnpackIntoMap(event, "CredentialRegistered", vLog.Data)
+	// if err != nil {
+	// 	fmt.Printf("%s", err)
+	// 	continue
+	// }
+	// fmt.Printf("Event %v", event)
+	// 	var topics [4]string
+	// 	for i := range vLog.Topics {
+	// 		topics[i] = vLog.Topics[i].Hex()
+	// 		fmt.Printf("Topic %s", vLog.Topics[i].Hex())
+	// 	}
+	// }
+
+	// Check if registered
+	credentialAtContract, err := credentialRegistry.Credentials(&bind.CallOpts{Context: ctx}, credentialHash, issuer.Address)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("Credential at contract %v", credentialAtContract)
+	log.Printf("Credential hash %x", credentialHash)
 
 	vc.Proof = append(vc.Proof, Proof{
 		Id:                 issuer.Address.Hex(),
@@ -263,12 +309,6 @@ func DeployRegistry() {
 		Domain:             claimsVerifierAddress,
 		ProofValue:         "0x" + hex.EncodeToString(sig),
 	})
-
-	credentialAtContract, err := credentialRegistry.Credentials(&bind.CallOpts{Context: ctx}, [32]byte(credentialHash), subject.Address)
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("Credential at contract %v", credentialAtContract)
 
 	// verify a VC
 	json, err := json.Marshal(vc.CredentialSubject)
@@ -289,6 +329,32 @@ func DeployRegistry() {
 		ValidTo:   big.NewInt(vc.IssuanceDate.Unix() / 1000),
 	}
 
+	credentialHashAtContract, err := claimsVerifier.CredentialHash(&bind.CallOpts{Context: ctx}, vcToVerify)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("Credential hash at contract %x", credentialHashAtContract)
+
+	// tx, err = claimsVerifier.RegisterSignature(auth, credentialHash, signer_1.Address, sig)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// receipt, err = bind.WaitMined(ctx, back, tx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// if receipt.Status != 1 {
+	// 	panic("signature is not registered")
+	// }
+
+	// log.Println("RegisterSignature receipt status : ", receipt.Status)
+
+	verifySigner, err := claimsVerifier.VerifySigner(&bind.CallOpts{Pending: true, Context: ctx}, vcToVerify, sigToVerify)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("Verify signer %t", verifySigner)
+
 	credentialExists, isNotRevoked, issuerSignatureValid, additionalSigners, isNotExpired, err := claimsVerifier.VerifyCredential(&bind.CallOpts{Pending: true, Context: ctx}, vcToVerify, uint8(sigToVerify[64]), [32]byte(sigToVerify[:32]), [32]byte(sigToVerify[32:64]))
 	if err != nil {
 		panic(err)
@@ -297,12 +363,13 @@ func DeployRegistry() {
 	log.Println(credentialExists, isNotRevoked, issuerSignatureValid, additionalSigners, isNotExpired)
 }
 
-func getCredentialHash(vc Credential, issuer common.Address, claimsVerifierContractAddress common.Address) ([]byte, error) {
+func getCredentialHash(vc Credential, issuer common.Address, claimsVerifierContractAddress common.Address) ([32]byte, error) {
 	json, err := json.Marshal(vc.CredentialSubject)
 	if err != nil {
-		return nil, fmt.Errorf("cant marshall %w", err)
+		return [32]byte{}, fmt.Errorf("cant marshall %w", err)
 	}
-	hashDiplomaHex := hexutil.Encode(Sha256(json))
+	data := Sha256(json)
+	// hashDiplomaHex := hexutil.Encode(jsonHash[:])
 
 	argumentsEIP712Domain := abi.Arguments{
 		{
@@ -326,11 +393,11 @@ func getCredentialHash(vc Credential, issuer common.Address, claimsVerifierContr
 		EIP712DOMAIN_TYPEHASH,
 		Sha256([]byte("EIP712Domain")),
 		Sha256([]byte("1")),
-		1,
+		big.NewInt(648529),
 		claimsVerifierContractAddress,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("cant abi pack argumentsEIP712Domain %w", err)
+		return [32]byte{}, fmt.Errorf("cant abi pack argumentsEIP712Domain %w", err)
 	}
 
 	hashEIP712Domain := Sha256(encodeEIP712Domain)
@@ -362,12 +429,12 @@ func getCredentialHash(vc Credential, issuer common.Address, claimsVerifierContr
 		VERIFIABLE_CREDENTIAL_TYPEHASH,
 		issuer,
 		common.HexToAddress(subjectAddress),
-		hashDiplomaHex,
-		vc.IssuanceDate.Unix(),
-		vc.ExpirationDate.Unix(),
+		data,
+		big.NewInt(vc.IssuanceDate.Unix()),
+		big.NewInt(vc.ExpirationDate.Unix()),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("cant abi pack argumentsHashCredential %w", err)
+		return [32]byte{}, fmt.Errorf("cant abi pack argumentsHashCredential %w", err)
 	}
 	hashCredential := Sha256(encodeHashCredential)
 
@@ -382,16 +449,18 @@ func getCredentialHash(vc Credential, issuer common.Address, claimsVerifierContr
 
 	encodedCredentialHash, err := arguments.Pack(hashEIP712Domain, hashCredential)
 	if err != nil {
-		return nil, fmt.Errorf("cant abi pack arguments %w", err)
+		return [32]byte{}, fmt.Errorf("cant abi pack arguments %w", err)
 	}
 	return Sha256(append([]byte("0x1901"), encodedCredentialHash...)), nil
 
 }
 
-func Sha256(d []byte) []byte {
+func Sha256(d []byte) [32]byte {
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(d)
-	return hash.Sum(nil)
+	var res [32]byte
+	copy(res[:], hash.Sum(nil))
+	return res
 }
 
 func decodeSignature(sig []byte) (r, s, v *big.Int) {

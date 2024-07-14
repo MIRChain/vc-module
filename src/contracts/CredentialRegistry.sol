@@ -112,6 +112,7 @@ contract CredentialRegistry is ICredentialRegistry, AccessControl {
         Signature memory _newSignature = Signature(r, s, v);
         bool signExist = false;
         uint8 i = 0;
+        // TODO: avoid looping
         while (i < credential.signatures.length && !signExist) {
             if (credential.signatures[i].r == _newSignature.r && credential.signatures[i].s == _newSignature.s) {
                 signExist = true;

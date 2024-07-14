@@ -32,7 +32,7 @@ const ClaimTypesABI = "[]"
 var ClaimTypesParsedABI, _ = abi.JSON(strings.NewReader(ClaimTypesABI))
 
 // ClaimTypesBin is the compiled bytecode used for deploying new contracts.
-var ClaimTypesBin = "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212201ed2aa6ca8aef9a5f4beb09ab6ecf5ebc2336ff850d03d627837ad5d7e58e8bb64736f6c634300080e0033"
+var ClaimTypesBin = "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212207c3fbff9e11370194405590ed998395a9c7e213b8e80f1faf1fc5eef217dd1e964736f6c63430008120033"
 
 // DeployClaimTypes deploys a new Ethereum contract, binding an instance of ClaimTypes to it.
 func DeployClaimTypes(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ClaimTypes, error) {
