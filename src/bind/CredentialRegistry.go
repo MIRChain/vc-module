@@ -1118,7 +1118,6 @@ func (_CredentialRegistry *CredentialRegistryFilterer) FilterRoleAdminChanged(op
 	return &CredentialRegistryRoleAdminChangedIterator{contract: _CredentialRegistry.contract, event: "RoleAdminChanged", logs: logs, sub: sub}, nil
 }
 
-var RoleAdminChangedTopicHash = "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff"
 
 // WatchRoleAdminChanged is a free log subscription operation binding the contract event 0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff.
 //
@@ -1282,7 +1281,6 @@ func (_CredentialRegistry *CredentialRegistryFilterer) FilterRoleGranted(opts *b
 	return &CredentialRegistryRoleGrantedIterator{contract: _CredentialRegistry.contract, event: "RoleGranted", logs: logs, sub: sub}, nil
 }
 
-var RoleGrantedTopicHash = "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d"
 
 // WatchRoleGranted is a free log subscription operation binding the contract event 0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d.
 //
@@ -1446,7 +1444,6 @@ func (_CredentialRegistry *CredentialRegistryFilterer) FilterRoleRevoked(opts *b
 	return &CredentialRegistryRoleRevokedIterator{contract: _CredentialRegistry.contract, event: "RoleRevoked", logs: logs, sub: sub}, nil
 }
 
-var RoleRevokedTopicHash = "0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b"
 
 // WatchRoleRevoked is a free log subscription operation binding the contract event 0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b.
 //

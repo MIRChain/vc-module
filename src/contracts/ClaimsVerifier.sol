@@ -84,7 +84,7 @@ contract ClaimsVerifier is AbstractClaimsVerifier, ClaimTypes, AccessControlEnum
     }
 
     modifier onlyIssuer() {
-        require(hasRole(ISSUER_ROLE, msg.sender), "Caller is not a issuer 1");
+        require(hasRole(ISSUER_ROLE, msg.sender), "Caller is not an issuer");
         _;
     }
 
