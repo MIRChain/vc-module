@@ -11,15 +11,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/MIRChain/MIR/accounts/abi"
+	"github.com/MIRChain/MIR/accounts/abi/bind"
+	"github.com/MIRChain/MIR/accounts/keystore"
+	"github.com/MIRChain/MIR/common"
+	"github.com/MIRChain/MIR/common/hexutil"
+	"github.com/MIRChain/MIR/crypto"
+	"github.com/MIRChain/MIR/crypto/gost3410"
+	"github.com/MIRChain/MIR/ethclient"
 	contract "github.com/MIRChain/vc-module/src/bind"
 )
 
@@ -80,49 +81,56 @@ func main() {
 
 func DeployRegistry() {
 	// gost3410.GostCurve = gost3410.CurveIdGostR34102001CryptoProAParamSet()
-	back, err := ethclient.Dial("http://127.0.0.1:7545")
+	back, err := ethclient.Dial[gost3410.PublicKey]("http://127.0.0.1:8545")
 	if err != nil {
 		panic(err)
 	}
 	ctx := context.Background()
 
 	// Accounts
-	jsonBytes, err := ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-13-21.083288244Z--014c0bb53c88290976012ea871c95a8d6dd03d0e")
+
+	// Subject
+	jsonBytes, err := ioutil.ReadFile("./keys/keystore/UTC--2023-04-11T19-26-02.261401864Z--1f1a2f8231efe45f0ff0c2ed3c27eebf58fc175c")
 	if err != nil {
 		log.Fatal(err)
 	}
-	subject, err := keystore.DecryptKey(jsonBytes, "12345678")
+	subject, err := keystore.DecryptKey[gost3410.PrivateKey, gost3410.PublicKey](jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-17.290930840Z--95a51c875f2764c46b4424e1fc361d2300d043f4")
+	// Issuer
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2023-04-11T19-26-13.229052536Z--9e3bbf9ee1d852881df69c97dcaed5d2da334ab8")
 	if err != nil {
 		log.Fatal(err)
 	}
-	issuer, err := keystore.DecryptKey(jsonBytes, "12345678")
+	issuer, err := keystore.DecryptKey[gost3410.PrivateKey, gost3410.PublicKey](jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-39.641539706Z--a32f367e95b038664e99851e4355947a5d2cdbda")
+	// Signer 1
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2023-04-11T19-26-23.168065714Z--0eb3d79a3fd6ff8f711b418ccca19e3ed6c56ae6")
 	if err != nil {
 		log.Fatal(err)
 	}
-	signer_1, err := keystore.DecryptKey(jsonBytes, "12345678")
+	signer_1, err := keystore.DecryptKey[gost3410.PrivateKey, gost3410.PublicKey](jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-53.521102494Z--5246b17c9c99fcb0a2e8c79e3f151e45ca70b9f9")
-	if err != nil {
-		log.Fatal(err)
-	}
-	signer_2, err := keystore.DecryptKey(jsonBytes, "12345678")
-	if err != nil {
-		panic(err)
-	}
-	auth, err := bind.NewKeyedTransactorWithChainID(issuer.PrivateKey, big.NewInt(648529))
+	// Signer 2
+
+	// jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-53.521102494Z--5246b17c9c99fcb0a2e8c79e3f151e45ca70b9f9")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// signer_2, err := keystore.DecryptKey(jsonBytes, "12345678")
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	auth, err := bind.NewKeyedTransactorWithChainID[gost3410.PrivateKey, gost3410.PublicKey](issuer.PrivateKey, big.NewInt(648529))
 	if err != nil {
 		panic(err)
 	}
@@ -135,7 +143,7 @@ func DeployRegistry() {
 	log.Println("Contract Credential Registry deployed at addr: ", registryAddress.Hex())
 	log.Println("Tx hash ", tx.Hash().Hex())
 
-	receipt, err := bind.WaitMined(ctx, back, tx)
+	receipt, err := bind.WaitMined[gost3410.PublicKey](ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +163,7 @@ func DeployRegistry() {
 	log.Println("Contract Credential Registry deployed at addr: ", claimsVerifierAddress.Hex())
 	log.Println("Tx hash ", tx.Hash().Hex())
 
-	receipt, err = bind.WaitMined(ctx, back, tx)
+	receipt, err = bind.WaitMined[gost3410.PublicKey](ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,7 +192,7 @@ func DeployRegistry() {
 	if err != nil {
 		panic(err)
 	}
-	receipt, err = bind.WaitMined(ctx, back, tx)
+	receipt, err = bind.WaitMined[gost3410.PublicKey](ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}
@@ -193,7 +201,7 @@ func DeployRegistry() {
 	if err != nil {
 		panic(err)
 	}
-	receipt, err = bind.WaitMined(ctx, back, tx)
+	receipt, err = bind.WaitMined[gost3410.PublicKey](ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +210,20 @@ func DeployRegistry() {
 	if err != nil {
 		panic(err)
 	}
-	receipt, err = bind.WaitMined(ctx, back, tx)
+	receipt, err = bind.WaitMined[gost3410.PublicKey](ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}
 	log.Println("receipt block num : ", receipt.BlockNumber.String())
-	tx, err = claimsVerifier.GrantRole(auth, signerRole, signer_2.Address)
-	if err != nil {
-		panic(err)
-	}
-	receipt, err = bind.WaitMined(ctx, back, tx)
-	if err != nil {
-		panic(err)
-	}
-	log.Println("receipt block num : ", receipt.BlockNumber.String())
+	// tx, err = claimsVerifier.GrantRole(auth, signerRole, signer_2.Address)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// receipt, err = bind.WaitMined(ctx, back, tx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// log.Println("receipt block num : ", receipt.BlockNumber.String())
 
 	vc := Credential{
 		Context:        "https://www.w3.org/2018/credentials/v1",
@@ -273,7 +281,7 @@ func DeployRegistry() {
 		panic(err)
 	}
 
-	receipt, err = bind.WaitMined(ctx, back, tx)
+	receipt, err = bind.WaitMined[gost3410.PublicKey](ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}
@@ -355,7 +363,7 @@ func DeployRegistry() {
 
 	sigSigner_1[64] = v.Bytes()[0]
 
-	authSigner_1, err := bind.NewKeyedTransactorWithChainID(signer_1.PrivateKey, big.NewInt(648529))
+	authSigner_1, err := bind.NewKeyedTransactorWithChainID[gost3410.PrivateKey, gost3410.PublicKey](signer_1.PrivateKey, big.NewInt(648529))
 	if err != nil {
 		panic(err)
 	}
@@ -364,7 +372,7 @@ func DeployRegistry() {
 	if err != nil {
 		panic(err)
 	}
-	receipt, err = bind.WaitMined(ctx, back, tx)
+	receipt, err = bind.WaitMined[gost3410.PublicKey](ctx, back, tx)
 	if err != nil {
 		panic(err)
 	}

@@ -7,12 +7,13 @@ import (
 	"math/big"
 	"strings"
 
-	ethereum "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/event"
+	ethereum "github.com/MIRChain/MIR"
+	"github.com/MIRChain/MIR/accounts/abi"
+	"github.com/MIRChain/MIR/accounts/abi/bind"
+	"github.com/MIRChain/MIR/common"
+	"github.com/MIRChain/MIR/core/types"
+	"github.com/MIRChain/MIR/event"
+	"github.com/MIRChain/MIR/crypto/gost3410"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -20,16 +21,16 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = bind.Bind
+	_ = bind.Bind[gost3410.PublicKey]
 	_ = common.Big1
-	_ = types.BloomLookup
+	_ = types.BloomLookup[gost3410.PublicKey]
 	_ = event.NewSubscription
 )
 
 // PermImplABI is the input ABI used to generate the binding from.
 const PermImplABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"credentialHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"by\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"iat\",\"type\":\"uint256\"}],\"name\":\"CredentialRegistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"credentialHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"by\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"date\",\"type\":\"uint256\"}],\"name\":\"CredentialRevoked\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"credentialHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"issuer\",\"type\":\"address\"}],\"name\":\"exist\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"issuer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"subject\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"credentialHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"from\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"exp\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"signature\",\"type\":\"bytes\"}],\"name\":\"registerCredential\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"credentialHash\",\"type\":\"bytes32\"}],\"name\":\"revokeCredential\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"issuer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_credentialHash\",\"type\":\"bytes32\"}],\"name\":\"status\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]"
 
-var PermImplParsedABI, _ = abi.JSON(strings.NewReader(PermImplABI))
+var PermImplParsedABI, _ = abi.JSON[gost3410.PublicKey](strings.NewReader(PermImplABI))
 
 // PermImpl is an auto generated Go binding around an Ethereum contract.
 type PermImpl struct {
@@ -40,17 +41,17 @@ type PermImpl struct {
 
 // PermImplCaller is an auto generated read-only Go binding around an Ethereum contract.
 type PermImplCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+	contract *bind.BoundContract[gost3410.PublicKey] // Generic contract wrapper for the low level calls
 }
 
 // PermImplTransactor is an auto generated write-only Go binding around an Ethereum contract.
 type PermImplTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+	contract *bind.BoundContract[gost3410.PublicKey] // Generic contract wrapper for the low level calls
 }
 
 // PermImplFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
 type PermImplFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+	contract *bind.BoundContract[gost3410.PublicKey] // Generic contract wrapper for the low level calls
 }
 
 // PermImplSession is an auto generated Go binding around an Ethereum contract,
@@ -58,7 +59,7 @@ type PermImplFilterer struct {
 type PermImplSession struct {
 	Contract     *PermImpl         // Generic contract binding to set the session for
 	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+	TransactOpts bind.TransactOpts[gost3410.PublicKey] // Transaction auth options to use throughout this session
 }
 
 // PermImplCallerSession is an auto generated read-only Go binding around an Ethereum contract,
@@ -72,7 +73,7 @@ type PermImplCallerSession struct {
 // with pre-set transact options.
 type PermImplTransactorSession struct {
 	Contract     *PermImplTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
+	TransactOpts bind.TransactOpts[gost3410.PublicKey]   // Transaction auth options to use throughout this session
 }
 
 // PermImplRaw is an auto generated low-level Go binding around an Ethereum contract.
@@ -91,7 +92,7 @@ type PermImplTransactorRaw struct {
 }
 
 // NewPermImpl creates a new instance of PermImpl, bound to a specific deployed contract.
-func NewPermImpl(address common.Address, backend bind.ContractBackend) (*PermImpl, error) {
+func NewPermImpl(address common.Address, backend bind.ContractBackend[gost3410.PublicKey]) (*PermImpl, error) {
 	contract, err := bindPermImpl(address, backend, backend, backend)
 	if err != nil {
 		return nil, err
@@ -109,7 +110,7 @@ func NewPermImplCaller(address common.Address, caller bind.ContractCaller) (*Per
 }
 
 // NewPermImplTransactor creates a new write-only instance of PermImpl, bound to a specific deployed contract.
-func NewPermImplTransactor(address common.Address, transactor bind.ContractTransactor) (*PermImplTransactor, error) {
+func NewPermImplTransactor(address common.Address, transactor bind.ContractTransactor[gost3410.PublicKey]) (*PermImplTransactor, error) {
 	contract, err := bindPermImpl(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
@@ -127,8 +128,8 @@ func NewPermImplFilterer(address common.Address, filterer bind.ContractFilterer)
 }
 
 // bindPermImpl binds a generic wrapper to an already deployed contract.
-func bindPermImpl(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(PermImplABI))
+func bindPermImpl(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor[gost3410.PublicKey], filterer bind.ContractFilterer) (*bind.BoundContract[gost3410.PublicKey], error) {
+	parsed, err := abi.JSON[gost3410.PublicKey](strings.NewReader(PermImplABI))
 	if err != nil {
 		return nil, err
 	}
@@ -145,12 +146,12 @@ func (_PermImpl *PermImplRaw) Call(opts *bind.CallOpts, result *[]interface{}, m
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_PermImpl *PermImplRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_PermImpl *PermImplRaw) Transfer(opts *bind.TransactOpts[gost3410.PublicKey]) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.PermImplTransactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_PermImpl *PermImplRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_PermImpl *PermImplRaw) Transact(opts *bind.TransactOpts[gost3410.PublicKey], method string, params ...interface{}) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.PermImplTransactor.contract.Transact(opts, method, params...)
 }
 
@@ -164,12 +165,12 @@ func (_PermImpl *PermImplCallerRaw) Call(opts *bind.CallOpts, result *[]interfac
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_PermImpl *PermImplTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_PermImpl *PermImplTransactorRaw) Transfer(opts *bind.TransactOpts[gost3410.PublicKey]) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_PermImpl *PermImplTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_PermImpl *PermImplTransactorRaw) Transact(opts *bind.TransactOpts[gost3410.PublicKey], method string, params ...interface{}) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.contract.Transact(opts, method, params...)
 }
 
@@ -238,42 +239,42 @@ func (_PermImpl *PermImplCallerSession) Status(issuer common.Address, _credentia
 // RegisterCredential is a paid mutator transaction binding the contract method 0x75130747.
 //
 // Solidity: function registerCredential(address issuer, address subject, bytes32 credentialHash, uint256 from, uint256 exp, bytes signature) returns(bool)
-func (_PermImpl *PermImplTransactor) RegisterCredential(opts *bind.TransactOpts, issuer common.Address, subject common.Address, credentialHash [32]byte, from *big.Int, exp *big.Int, signature []byte) (*types.Transaction, error) {
+func (_PermImpl *PermImplTransactor) RegisterCredential(opts *bind.TransactOpts[gost3410.PublicKey], issuer common.Address, subject common.Address, credentialHash [32]byte, from *big.Int, exp *big.Int, signature []byte) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.contract.Transact(opts, "registerCredential", issuer, subject, credentialHash, from, exp, signature)
 }
 
 // RegisterCredential is a paid mutator transaction binding the contract method 0x75130747.
 //
 // Solidity: function registerCredential(address issuer, address subject, bytes32 credentialHash, uint256 from, uint256 exp, bytes signature) returns(bool)
-func (_PermImpl *PermImplSession) RegisterCredential(issuer common.Address, subject common.Address, credentialHash [32]byte, from *big.Int, exp *big.Int, signature []byte) (*types.Transaction, error) {
+func (_PermImpl *PermImplSession) RegisterCredential(issuer common.Address, subject common.Address, credentialHash [32]byte, from *big.Int, exp *big.Int, signature []byte) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.RegisterCredential(&_PermImpl.TransactOpts, issuer, subject, credentialHash, from, exp, signature)
 }
 
 // RegisterCredential is a paid mutator transaction binding the contract method 0x75130747.
 //
 // Solidity: function registerCredential(address issuer, address subject, bytes32 credentialHash, uint256 from, uint256 exp, bytes signature) returns(bool)
-func (_PermImpl *PermImplTransactorSession) RegisterCredential(issuer common.Address, subject common.Address, credentialHash [32]byte, from *big.Int, exp *big.Int, signature []byte) (*types.Transaction, error) {
+func (_PermImpl *PermImplTransactorSession) RegisterCredential(issuer common.Address, subject common.Address, credentialHash [32]byte, from *big.Int, exp *big.Int, signature []byte) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.RegisterCredential(&_PermImpl.TransactOpts, issuer, subject, credentialHash, from, exp, signature)
 }
 
 // RevokeCredential is a paid mutator transaction binding the contract method 0xca6eec78.
 //
 // Solidity: function revokeCredential(bytes32 credentialHash) returns(bool)
-func (_PermImpl *PermImplTransactor) RevokeCredential(opts *bind.TransactOpts, credentialHash [32]byte) (*types.Transaction, error) {
+func (_PermImpl *PermImplTransactor) RevokeCredential(opts *bind.TransactOpts[gost3410.PublicKey], credentialHash [32]byte) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.contract.Transact(opts, "revokeCredential", credentialHash)
 }
 
 // RevokeCredential is a paid mutator transaction binding the contract method 0xca6eec78.
 //
 // Solidity: function revokeCredential(bytes32 credentialHash) returns(bool)
-func (_PermImpl *PermImplSession) RevokeCredential(credentialHash [32]byte) (*types.Transaction, error) {
+func (_PermImpl *PermImplSession) RevokeCredential(credentialHash [32]byte) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.RevokeCredential(&_PermImpl.TransactOpts, credentialHash)
 }
 
 // RevokeCredential is a paid mutator transaction binding the contract method 0xca6eec78.
 //
 // Solidity: function revokeCredential(bytes32 credentialHash) returns(bool)
-func (_PermImpl *PermImplTransactorSession) RevokeCredential(credentialHash [32]byte) (*types.Transaction, error) {
+func (_PermImpl *PermImplTransactorSession) RevokeCredential(credentialHash [32]byte) (*types.Transaction[gost3410.PublicKey], error) {
 	return _PermImpl.Contract.RevokeCredential(&_PermImpl.TransactOpts, credentialHash)
 }
 
@@ -281,7 +282,7 @@ func (_PermImpl *PermImplTransactorSession) RevokeCredential(credentialHash [32]
 type PermImplCredentialRegisteredIterator struct {
 	Event *PermImplCredentialRegistered // Event containing the contract specifics and raw log
 
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	contract *bind.BoundContract[gost3410.PublicKey] // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
 	logs chan types.Log        // Log channel receiving the found contract events
@@ -430,7 +431,7 @@ func (_PermImpl *PermImplFilterer) ParseCredentialRegistered(log types.Log) (*Pe
 type PermImplCredentialRevokedIterator struct {
 	Event *PermImplCredentialRevoked // Event containing the contract specifics and raw log
 
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	contract *bind.BoundContract[gost3410.PublicKey] // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
 	logs chan types.Log        // Log channel receiving the found contract events
