@@ -241,8 +241,8 @@ func DeployRegistry() {
 		Issuer:    common.HexToAddress(strings.Split(vc.Issuer, ":")[3]),
 		Subject:   common.HexToAddress(strings.Split(vc.CredentialSubject.Id, ":")[3]),
 		Data:      [32]byte(data),
-		ValidFrom: big.NewInt(vc.IssuanceDate.Unix() / 1000),
-		ValidTo:   big.NewInt(vc.ExpirationDate.Unix() / 1000),
+		ValidFrom: big.NewInt(vc.IssuanceDate.Unix()),
+		ValidTo:   big.NewInt(vc.ExpirationDate.Unix()),
 	}
 
 	credentialHashAtContract, err := claimsVerifier.CredentialHash(&bind.CallOpts{Context: ctx}, vcToVerify)
@@ -268,7 +268,7 @@ func DeployRegistry() {
 	sig[64] = v.Bytes()[0]
 
 	// register a VC
-	tx, err = claimsVerifier.RegisterCredential(auth, subject.Address, credentialHashAtContract, big.NewInt(vc.IssuanceDate.Unix()/1000), big.NewInt(vc.ExpirationDate.Unix()/1000), sig)
+	tx, err = claimsVerifier.RegisterCredential(auth, subject.Address, credentialHashAtContract, big.NewInt(vc.IssuanceDate.Unix()), big.NewInt(vc.ExpirationDate.Unix()), sig)
 	if err != nil {
 		panic(err)
 	}

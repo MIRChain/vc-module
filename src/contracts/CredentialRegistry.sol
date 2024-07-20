@@ -18,6 +18,8 @@ contract CredentialRegistry is ICredentialRegistry, AccessControl {
     function registerCredential(address issuer, address _subject, bytes32 _credentialHash, uint256 _from, uint256 _exp, bytes calldata signature) external override onlyIssuer returns (bool) {
         CredentialMetadata storage credential = credentials[_credentialHash][issuer];
         require(credential.subject == address(0), "Credential already exists");
+        require(_from < _exp, "Incorrect issuance date");
+        require(_exp > block.timestamp, "Incorrect expiration date");
         credential.issuer = issuer;
         credential.subject = _subject;
         credential.validFrom = _from;

@@ -57,7 +57,7 @@ contract AbstractClaimsVerifier {
     }
 
     function _validPeriod(uint256 validFrom, uint256 validTo) internal view returns (bool) {
-        return (validFrom <= block.timestamp) && (block.timestamp < validTo);
+        return (validFrom <= block.timestamp) && (validTo > block.timestamp);
     }
 
     function _verifySigners(bytes32 _digest, address _issuer) internal view returns (uint8){
