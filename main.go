@@ -135,7 +135,7 @@ func DeployRegistry() {
 		panic(err)
 	}
 	// Deploying Credential Registry
-	registryAddress, tx, _, err := contract.DeployCredentialRegistry(auth, back)
+	registryAddress, tx, _, err := contract.DeployCredentialRegistry[gost3410.PublicKey](auth, back)
 	if err != nil {
 		panic(err)
 	}
@@ -149,13 +149,13 @@ func DeployRegistry() {
 	}
 	log.Println("Contract receipt block num : ", receipt.BlockNumber.String())
 
-	credentialRegistry, err := contract.NewCredentialRegistry(registryAddress, back)
+	credentialRegistry, err := contract.NewCredentialRegistry[gost3410.PublicKey](registryAddress, back)
 	if err != nil {
 		panic(err)
 	}
 
 	// Deploying Claims Verifier
-	claimsVerifierAddress, tx, _, err := contract.DeployClaimsVerifier(auth, back, registryAddress)
+	claimsVerifierAddress, tx, _, err := contract.DeployClaimsVerifier[gost3410.PublicKey](auth, back, registryAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -169,7 +169,7 @@ func DeployRegistry() {
 	}
 	log.Println("Contract receipt block num : ", receipt.BlockNumber.String())
 
-	claimsVerifier, err := contract.NewClaimsVerifier(claimsVerifierAddress, back)
+	claimsVerifier, err := contract.NewClaimsVerifier[gost3410.PublicKey](claimsVerifierAddress, back)
 	if err != nil {
 		panic(err)
 	}
@@ -245,7 +245,7 @@ func DeployRegistry() {
 	}
 	data := Sha256(json)
 
-	vcToVerify := contract.ClaimTypesVerifiableCredential{
+	vcToVerify := contract.ClaimTypesVerifiableCredential[gost3410.PublicKey]{
 		Issuer:    common.HexToAddress(strings.Split(vc.Issuer, ":")[3]),
 		Subject:   common.HexToAddress(strings.Split(vc.CredentialSubject.Id, ":")[3]),
 		Data:      [32]byte(data),
