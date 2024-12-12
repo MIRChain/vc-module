@@ -7,12 +7,14 @@ import (
 	"math/big"
 	"strings"
 
-	ethereum "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/event"
+	ethereum "github.com/MIRChain/MIR"
+	"github.com/MIRChain/MIR/accounts/abi"
+	"github.com/MIRChain/MIR/accounts/abi/bind"
+	"github.com/MIRChain/MIR/common"
+	"github.com/MIRChain/MIR/core/types"
+	"github.com/MIRChain/MIR/crypto"
+	"github.com/MIRChain/MIR/crypto/gost3410"
+	"github.com/MIRChain/MIR/event"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -20,23 +22,21 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = bind.Bind
 	_ = common.Big1
-	_ = types.BloomLookup
 	_ = event.NewSubscription
 )
 
 // ClaimTypesABI is the input ABI used to generate the binding from.
 const ClaimTypesABI = "[]"
 
-var ClaimTypesParsedABI, _ = abi.JSON(strings.NewReader(ClaimTypesABI))
+var ClaimTypesParsedABI, _ = abi.JSON[gost3410.PublicKey](strings.NewReader(ClaimTypesABI))
 
 // ClaimTypesBin is the compiled bytecode used for deploying new contracts.
-var ClaimTypesBin = "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212207c3fbff9e11370194405590ed998395a9c7e213b8e80f1faf1fc5eef217dd1e964736f6c63430008120033"
+var ClaimTypesBin = "0x6080604052348015600f57600080fd5b50606a80601d6000396000f3fe6080604052600080fdfea26469706673582212201c7569083210b54165821efb7a5bf0227d3bdb1c4627df6aacb6f9feaab581fc64736f6c63782d302e382e31342d646576656c6f702e323032342e31322e31322b636f6d6d69742e62396362363034312e6d6f64005e"
 
 // DeployClaimTypes deploys a new Ethereum contract, binding an instance of ClaimTypes to it.
-func DeployClaimTypes(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ClaimTypes, error) {
-	parsed, err := abi.JSON(strings.NewReader(ClaimTypesABI))
+func DeployClaimTypes[P crypto.PublicKey](auth *bind.TransactOpts[P], backend bind.ContractBackend[P]) (common.Address, *types.Transaction[P], *ClaimTypes[P], error) {
+	parsed, err := abi.JSON[P](strings.NewReader(ClaimTypesABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -45,107 +45,107 @@ func DeployClaimTypes(auth *bind.TransactOpts, backend bind.ContractBackend) (co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	return address, tx, &ClaimTypes{ClaimTypesCaller: ClaimTypesCaller{contract: contract}, ClaimTypesTransactor: ClaimTypesTransactor{contract: contract}, ClaimTypesFilterer: ClaimTypesFilterer{contract: contract}}, nil
+	return address, tx, &ClaimTypes[P]{ClaimTypesCaller: ClaimTypesCaller[P]{contract: contract}, ClaimTypesTransactor: ClaimTypesTransactor[P]{contract: contract}, ClaimTypesFilterer: ClaimTypesFilterer[P]{contract: contract}}, nil
 }
 
 // ClaimTypes is an auto generated Go binding around an Ethereum contract.
-type ClaimTypes struct {
-	ClaimTypesCaller     // Read-only binding to the contract
-	ClaimTypesTransactor // Write-only binding to the contract
-	ClaimTypesFilterer   // Log filterer for contract events
+type ClaimTypes[P crypto.PublicKey] struct {
+	ClaimTypesCaller[P]     // Read-only binding to the contract
+	ClaimTypesTransactor[P] // Write-only binding to the contract
+	ClaimTypesFilterer[P]   // Log filterer for contract events
 }
 
 // ClaimTypesCaller is an auto generated read-only Go binding around an Ethereum contract.
-type ClaimTypesCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+type ClaimTypesCaller[P crypto.PublicKey] struct {
+	contract *bind.BoundContract[P] // Generic contract wrapper for the low level calls
 }
 
 // ClaimTypesTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type ClaimTypesTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+type ClaimTypesTransactor[P crypto.PublicKey] struct {
+	contract *bind.BoundContract[P] // Generic contract wrapper for the low level calls
 }
 
 // ClaimTypesFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type ClaimTypesFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+type ClaimTypesFilterer[P crypto.PublicKey] struct {
+	contract *bind.BoundContract[P] // Generic contract wrapper for the low level calls
 }
 
 // ClaimTypesSession is an auto generated Go binding around an Ethereum contract,
 // with pre-set call and transact options.
-type ClaimTypesSession struct {
-	Contract     *ClaimTypes       // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+type ClaimTypesSession[P crypto.PublicKey] struct {
+	Contract     *ClaimTypes[P]       // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts        // Call options to use throughout this session
+	TransactOpts bind.TransactOpts[P] // Transaction auth options to use throughout this session
 }
 
 // ClaimTypesCallerSession is an auto generated read-only Go binding around an Ethereum contract,
 // with pre-set call options.
-type ClaimTypesCallerSession struct {
-	Contract *ClaimTypesCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts     // Call options to use throughout this session
+type ClaimTypesCallerSession[P crypto.PublicKey] struct {
+	Contract *ClaimTypesCaller[P] // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts        // Call options to use throughout this session
 }
 
 // ClaimTypesTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
 // with pre-set transact options.
-type ClaimTypesTransactorSession struct {
-	Contract     *ClaimTypesTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
+type ClaimTypesTransactorSession[P crypto.PublicKey] struct {
+	Contract     *ClaimTypesTransactor[P] // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts[P]     // Transaction auth options to use throughout this session
 }
 
 // ClaimTypesRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ClaimTypesRaw struct {
-	Contract *ClaimTypes // Generic contract binding to access the raw methods on
+type ClaimTypesRaw[P crypto.PublicKey] struct {
+	Contract *ClaimTypes[P] // Generic contract binding to access the raw methods on
 }
 
 // ClaimTypesCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ClaimTypesCallerRaw struct {
-	Contract *ClaimTypesCaller // Generic read-only contract binding to access the raw methods on
+type ClaimTypesCallerRaw[P crypto.PublicKey] struct {
+	Contract *ClaimTypesCaller[P] // Generic read-only contract binding to access the raw methods on
 }
 
 // ClaimTypesTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ClaimTypesTransactorRaw struct {
-	Contract *ClaimTypesTransactor // Generic write-only contract binding to access the raw methods on
+type ClaimTypesTransactorRaw[P crypto.PublicKey] struct {
+	Contract *ClaimTypesTransactor[P] // Generic write-only contract binding to access the raw methods on
 }
 
 // NewClaimTypes creates a new instance of ClaimTypes, bound to a specific deployed contract.
-func NewClaimTypes(address common.Address, backend bind.ContractBackend) (*ClaimTypes, error) {
-	contract, err := bindClaimTypes(address, backend, backend, backend)
+func NewClaimTypes[P crypto.PublicKey](address common.Address, backend bind.ContractBackend[P]) (*ClaimTypes[P], error) {
+	contract, err := bindClaimTypes[P](address, backend, backend, backend)
 	if err != nil {
 		return nil, err
 	}
-	return &ClaimTypes{ClaimTypesCaller: ClaimTypesCaller{contract: contract}, ClaimTypesTransactor: ClaimTypesTransactor{contract: contract}, ClaimTypesFilterer: ClaimTypesFilterer{contract: contract}}, nil
+	return &ClaimTypes[P]{ClaimTypesCaller: ClaimTypesCaller[P]{contract: contract}, ClaimTypesTransactor: ClaimTypesTransactor[P]{contract: contract}, ClaimTypesFilterer: ClaimTypesFilterer[P]{contract: contract}}, nil
 }
 
 // NewClaimTypesCaller creates a new read-only instance of ClaimTypes, bound to a specific deployed contract.
-func NewClaimTypesCaller(address common.Address, caller bind.ContractCaller) (*ClaimTypesCaller, error) {
-	contract, err := bindClaimTypes(address, caller, nil, nil)
+func NewClaimTypesCaller[P crypto.PublicKey](address common.Address, caller bind.ContractCaller) (*ClaimTypesCaller[P], error) {
+	contract, err := bindClaimTypes[P](address, caller, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &ClaimTypesCaller{contract: contract}, nil
+	return &ClaimTypesCaller[P]{contract: contract}, nil
 }
 
 // NewClaimTypesTransactor creates a new write-only instance of ClaimTypes, bound to a specific deployed contract.
-func NewClaimTypesTransactor(address common.Address, transactor bind.ContractTransactor) (*ClaimTypesTransactor, error) {
-	contract, err := bindClaimTypes(address, nil, transactor, nil)
+func NewClaimTypesTransactor[P crypto.PublicKey](address common.Address, transactor bind.ContractTransactor[P]) (*ClaimTypesTransactor[P], error) {
+	contract, err := bindClaimTypes[P](address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &ClaimTypesTransactor{contract: contract}, nil
+	return &ClaimTypesTransactor[P]{contract: contract}, nil
 }
 
 // NewClaimTypesFilterer creates a new log filterer instance of ClaimTypes, bound to a specific deployed contract.
-func NewClaimTypesFilterer(address common.Address, filterer bind.ContractFilterer) (*ClaimTypesFilterer, error) {
-	contract, err := bindClaimTypes(address, nil, nil, filterer)
+func NewClaimTypesFilterer[P crypto.PublicKey](address common.Address, filterer bind.ContractFilterer) (*ClaimTypesFilterer[P], error) {
+	contract, err := bindClaimTypes[P](address, nil, nil, filterer)
 	if err != nil {
 		return nil, err
 	}
-	return &ClaimTypesFilterer{contract: contract}, nil
+	return &ClaimTypesFilterer[P]{contract: contract}, nil
 }
 
 // bindClaimTypes binds a generic wrapper to an already deployed contract.
-func bindClaimTypes(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ClaimTypesABI))
+func bindClaimTypes[P crypto.PublicKey](address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor[P], filterer bind.ContractFilterer) (*bind.BoundContract[P], error) {
+	parsed, err := abi.JSON[P](strings.NewReader(ClaimTypesABI))
 	if err != nil {
 		return nil, err
 	}
@@ -156,18 +156,18 @@ func bindClaimTypes(address common.Address, caller bind.ContractCaller, transact
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_ClaimTypes *ClaimTypesRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_ClaimTypes *ClaimTypesRaw[P]) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _ClaimTypes.Contract.ClaimTypesCaller.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_ClaimTypes *ClaimTypesRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_ClaimTypes *ClaimTypesRaw[P]) Transfer(opts *bind.TransactOpts[P]) (*types.Transaction[P], error) {
 	return _ClaimTypes.Contract.ClaimTypesTransactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_ClaimTypes *ClaimTypesRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_ClaimTypes *ClaimTypesRaw[P]) Transact(opts *bind.TransactOpts[P], method string, params ...interface{}) (*types.Transaction[P], error) {
 	return _ClaimTypes.Contract.ClaimTypesTransactor.contract.Transact(opts, method, params...)
 }
 
@@ -175,17 +175,17 @@ func (_ClaimTypes *ClaimTypesRaw) Transact(opts *bind.TransactOpts, method strin
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_ClaimTypes *ClaimTypesCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_ClaimTypes *ClaimTypesCallerRaw[P]) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _ClaimTypes.Contract.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_ClaimTypes *ClaimTypesTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_ClaimTypes *ClaimTypesTransactorRaw[P]) Transfer(opts *bind.TransactOpts[P]) (*types.Transaction[P], error) {
 	return _ClaimTypes.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_ClaimTypes *ClaimTypesTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_ClaimTypes *ClaimTypesTransactorRaw[P]) Transact(opts *bind.TransactOpts[P], method string, params ...interface{}) (*types.Transaction[P], error) {
 	return _ClaimTypes.Contract.contract.Transact(opts, method, params...)
 }

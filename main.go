@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -11,15 +12,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/MIRChain/MIR/accounts/abi"
+	"github.com/MIRChain/MIR/accounts/abi/bind"
+	"github.com/MIRChain/MIR/accounts/keystore"
+	"github.com/MIRChain/MIR/common"
+	"github.com/MIRChain/MIR/common/hexutil"
+	"github.com/MIRChain/MIR/crypto"
+	"github.com/MIRChain/MIR/crypto/gost3410"
+	"github.com/MIRChain/MIR/ethclient"
 	contract "github.com/MIRChain/vc-module/src/bind"
 )
 
@@ -80,54 +82,54 @@ func main() {
 
 func DeployRegistry() {
 	// gost3410.GostCurve = gost3410.CurveIdGostR34102001CryptoProAParamSet()
-	back, err := ethclient.Dial("http://127.0.0.1:7545")
+	back, err := ethclient.Dial[gost3410.PublicKey]("http://127.0.0.1:8545")
 	if err != nil {
 		panic(err)
 	}
 	ctx := context.Background()
 
 	// Accounts
-	jsonBytes, err := ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-13-21.083288244Z--014c0bb53c88290976012ea871c95a8d6dd03d0e")
+	jsonBytes, err := ioutil.ReadFile("./keys/keystore/UTC--2024-12-03T13-15-26.041729909Z--bc0c44c1b5c949442de426835f482b3059f91a0e")
 	if err != nil {
 		log.Fatal(err)
 	}
-	subject, err := keystore.DecryptKey(jsonBytes, "12345678")
+	subject, err := keystore.DecryptKey[gost3410.PrivateKey, gost3410.PublicKey](jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-17.290930840Z--95a51c875f2764c46b4424e1fc361d2300d043f4")
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-12-03T13-27-19.046838222Z--4944fae399bd3ce7ad59b7c2607a49ad2c88bedf")
 	if err != nil {
 		log.Fatal(err)
 	}
-	issuer, err := keystore.DecryptKey(jsonBytes, "12345678")
+	issuer, err := keystore.DecryptKey[gost3410.PrivateKey, gost3410.PublicKey](jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-39.641539706Z--a32f367e95b038664e99851e4355947a5d2cdbda")
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-12-03T13-27-48.622054539Z--49a209d8dfbc39f6ce6ab6687b5e10fb22bd2553")
 	if err != nil {
 		log.Fatal(err)
 	}
-	signer_1, err := keystore.DecryptKey(jsonBytes, "12345678")
+	signer_1, err := keystore.DecryptKey[gost3410.PrivateKey, gost3410.PublicKey](jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-06-30T09-40-53.521102494Z--5246b17c9c99fcb0a2e8c79e3f151e45ca70b9f9")
+	jsonBytes, err = ioutil.ReadFile("./keys/keystore/UTC--2024-12-03T13-28-34.727809128Z--eebffbbcc47d5455ca314eb80503c425247802f9")
 	if err != nil {
 		log.Fatal(err)
 	}
-	signer_2, err := keystore.DecryptKey(jsonBytes, "12345678")
+	signer_2, err := keystore.DecryptKey[gost3410.PrivateKey, gost3410.PublicKey](jsonBytes, "12345678")
 	if err != nil {
 		panic(err)
 	}
-	auth, err := bind.NewKeyedTransactorWithChainID(issuer.PrivateKey, big.NewInt(648529))
+	auth, err := bind.NewKeyedTransactorWithChainID[gost3410.PrivateKey, gost3410.PublicKey](issuer.PrivateKey, big.NewInt(1515))
 	if err != nil {
 		panic(err)
 	}
 	// Deploying Credential Registry
-	registryAddress, tx, _, err := contract.DeployCredentialRegistry(auth, back)
+	registryAddress, tx, _, err := contract.DeployCredentialRegistry[gost3410.PublicKey](auth, back)
 	if err != nil {
 		panic(err)
 	}
@@ -198,6 +200,15 @@ func DeployRegistry() {
 		panic(err)
 	}
 	log.Println("receipt block num : ", receipt.BlockNumber.String())
+
+	checkRole, err := claimsVerifier.HasRole(&bind.CallOpts{Context: ctx}, issuerRole, auth.From)
+	if err != nil {
+		panic(err)
+	}
+	if !checkRole {
+		panic(fmt.Errorf("address %s, not issuer", auth.From))
+	}
+
 	tx, err = claimsVerifier.GrantRole(auth, signerRole, signer_1.Address)
 	if err != nil {
 		panic(err)
@@ -237,7 +248,7 @@ func DeployRegistry() {
 	}
 	data := Sha256(json)
 
-	vcToVerify := contract.ClaimTypesVerifiableCredential{
+	vcToVerify := contract.ClaimTypesVerifiableCredential[gost3410.PublicKey]{
 		Issuer:    common.HexToAddress(strings.Split(vc.Issuer, ":")[3]),
 		Subject:   common.HexToAddress(strings.Split(vc.CredentialSubject.Id, ":")[3]),
 		Data:      [32]byte(data),
@@ -261,6 +272,18 @@ func DeployRegistry() {
 	sig, err := crypto.Sign(credentialHashAtContract[:], issuer.PrivateKey)
 	if err != nil {
 		panic(err)
+	}
+
+	recoveredGostPub, err := crypto.Ecrecover[gost3410.PublicKey](credentialHashAtContract[:], sig)
+	if err != nil {
+		panic(err)
+	}
+
+	var addrFrom common.Address
+	copy(addrFrom[:], crypto.Keccak256[gost3410.PublicKey](recoveredGostPub[1:])[12:])
+
+	if !bytes.Equal(addrFrom.Bytes(), issuer.Address.Bytes()) {
+		panic(fmt.Errorf("exp %s, got %s", issuer.Address.String(), addrFrom.String()))
 	}
 
 	_, _, v := decodeSignature(sig)
@@ -355,7 +378,7 @@ func DeployRegistry() {
 
 	sigSigner_1[64] = v.Bytes()[0]
 
-	authSigner_1, err := bind.NewKeyedTransactorWithChainID(signer_1.PrivateKey, big.NewInt(648529))
+	authSigner_1, err := bind.NewKeyedTransactorWithChainID[gost3410.PrivateKey, gost3410.PublicKey](signer_1.PrivateKey, big.NewInt(1515))
 	if err != nil {
 		panic(err)
 	}
